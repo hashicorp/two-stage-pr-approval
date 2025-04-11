@@ -13,7 +13,7 @@ jobs:
       pull-requests: write
       contents: read
     steps:
-      - name: Check PR status
+      - name: Check PR status and team membership
         id: check-status
         uses: actions/github-script@v7
         with:
@@ -28,6 +28,13 @@ jobs:
               pull_number: pr_number
             });
             
+            // Define team members - same list for PR creators and approvers
+            const teamMembers = ["mukeshjc"];
+            
+            // Check if PR creator is on the team
+            const prCreator = pr.data.user.login;
+            const isTeamMember = teamMembers.includes(prCreator);
+            
             // Get PR labels
             const labels = pr.data.labels.map(label => label.name);
             const hasInternalApprovalLabel = labels.includes('internal-approval');
@@ -40,28 +47,29 @@ jobs:
               pull_number: pr_number
             });
             
-            // Check if the PR has an approval from your team
-            // Replace 'your-team' with the actual GitHub team name or specific usernames
-            const yourTeamMembers = ['mukeshjc'];
+            // Check if the PR has an approval from the team
             const hasInternalApproval = reviews.data.some(review => 
               review.state === 'APPROVED' && 
-              yourTeamMembers.includes(review.user.login)
+              teamMembers.includes(review.user.login)
             );
             
             // Output these values for use in later steps
             return {
               hasInternalApprovalLabel,
               hasInternalApproval,
-              isDraft
+              isDraft,
+              isTeamMember,
+              prCreator
             };
 
-      - name: Convert to draft if no internal approval
-        if: ${{ !fromJSON(steps.check-status.outputs.result).hasInternalApprovalLabel && !fromJSON(steps.check-status.outputs.result).isDraft }}
+      - name: Convert to draft if team member PR without internal approval
+        if: ${{ fromJSON(steps.check-status.outputs.result).isTeamMember && !fromJSON(steps.check-status.outputs.result).hasInternalApprovalLabel && !fromJSON(steps.check-status.outputs.result).isDraft }}
         uses: actions/github-script@v7
         with:
           script: |
             const { owner, repo } = context.repo;
             const pr_number = context.payload.pull_request ? context.payload.pull_request.number : context.payload.pull_request_review.pull_request.number;
+            const prCreator = fromJSON(steps.check-status.outputs.result).prCreator;
             
             // Convert to draft PR
             await github.rest.pulls.update({
@@ -76,11 +84,11 @@ jobs:
               owner,
               repo,
               issue_number: pr_number,
-              body: 'This PR has been automatically converted to draft status pending internal team review. Once approved by an internal team member, it will be made available for wider review.'
+              body: `This PR has been automatically converted to draft status pending internal team review. Once approved by another team member, it will be made available for wider review.`
             });
 
-      - name: Apply internal-approval label if approved by team
-        if: ${{ fromJSON(steps.check-status.outputs.result).hasInternalApproval && !fromJSON(steps.check-status.outputs.result).hasInternalApprovalLabel }}
+      - name: Apply internal-approval label if approved by team (for team PRs)
+        if: ${{ fromJSON(steps.check-status.outputs.result).isTeamMember && fromJSON(steps.check-status.outputs.result).hasInternalApproval && !fromJSON(steps.check-status.outputs.result).hasInternalApprovalLabel }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -103,8 +111,8 @@ jobs:
               body: 'Internal team approval granted! This PR is now ready for wider review.'
             });
 
-      - name: Convert from draft to ready if has internal approval
-        if: ${{ fromJSON(steps.check-status.outputs.result).hasInternalApprovalLabel && fromJSON(steps.check-status.outputs.result).isDraft }}
+      - name: Convert from draft to ready if team PR has internal approval
+        if: ${{ fromJSON(steps.check-status.outputs.result).isTeamMember && fromJSON(steps.check-status.outputs.result).hasInternalApprovalLabel && fromJSON(steps.check-status.outputs.result).isDraft }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -124,5 +132,5 @@ jobs:
               owner,
               repo,
               issue_number: pr_number,
-              body: 'This PR has received internal approval and is ready for wider review.'
+              body: 'This PR has been marked as ready for review following internal approval.'
             });
