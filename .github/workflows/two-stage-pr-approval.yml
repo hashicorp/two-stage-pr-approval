@@ -74,14 +74,19 @@ jobs:
             const statusResult = JSON.parse('${{ steps.check-status.outputs.result }}');
             const prCreator = statusResult.prCreator;
             
-            // Convert to draft PR
-            await github.rest.pulls.update({
-              owner,
-              repo,
-              pull_number: pr_number,
-              draft: true
-            });
-            
+            try {
+                console.log('Attempting direct draft conversion for PR:', pr_number);
+                const result = await github.rest.pulls.update({
+                  owner,
+                  repo,
+                  pull_number: pr_number,
+                  draft: true
+                });
+                console.log('Draft conversion response:', JSON.stringify(result, null, 2));
+            } catch (error) {
+                console.error('Error converting PR to draft:', error);
+            }
+
             // Add an internal review message
             await github.rest.issues.createComment({
               owner,
