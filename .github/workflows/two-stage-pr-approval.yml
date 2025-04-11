@@ -69,7 +69,10 @@ jobs:
           script: |
             const { owner, repo } = context.repo;
             const pr_number = context.payload.pull_request ? context.payload.pull_request.number : context.payload.pull_request_review.pull_request.number;
-            const prCreator = fromJSON(steps.check-status.outputs.result).prCreator;
+            
+            // Get PR status result from previous step
+            const statusResult = JSON.parse('${{ steps.check-status.outputs.result }}');
+            const prCreator = statusResult.prCreator;
             
             // Convert to draft PR
             await github.rest.pulls.update({
