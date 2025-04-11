@@ -1,0 +1,91 @@
+name: Two-Stage PR Review Process
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review, converted_to_draft]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  manage-pr-status:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Get PR details
+        id: pr-details
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          # Get PR creator
+          PR_CREATOR=$(gh pr view ${{ github.event.pull_request.number }} --json author --jq .author.login)
+          echo "PR_CREATOR=$PR_CREATOR" >> $GITHUB_OUTPUT
+          
+          # Check team membership
+          TEAM_MEMBERS="mukeshjc sonamtenzin2 abhijeetviswa mohanmanikanta2299"
+          if [[ $TEAM_MEMBERS == *"$PR_CREATOR"* ]]; then
+            echo "IS_TEAM_MEMBER=true" >> $GITHUB_OUTPUT
+          else
+            echo "IS_TEAM_MEMBER=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check if PR has internal-approval label
+          LABELS=$(gh pr view ${{ github.event.pull_request.number }} --json labels --jq '.labels[].name')
+          if [[ $LABELS == *"internal-approval"* ]]; then
+            echo "HAS_APPROVAL_LABEL=true" >> $GITHUB_OUTPUT
+          else
+            echo "HAS_APPROVAL_LABEL=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check if PR is in draft state
+          IS_DRAFT=$(gh pr view ${{ github.event.pull_request.number }} --json isDraft --jq .isDraft)
+          echo "IS_DRAFT=$IS_DRAFT" >> $GITHUB_OUTPUT
+          
+          # Check for team member approvals (excluding self-approval)
+          REVIEWS=$(gh pr view ${{ github.event.pull_request.number }} --json reviews --jq '.reviews[] | select(.state=="APPROVED") | .author.login')
+          HAS_TEAM_APPROVAL="false"
+          for REVIEWER in $REVIEWS; do
+            if [[ $TEAM_MEMBERS == *"$REVIEWER"* && "$REVIEWER" != "$PR_CREATOR" ]]; then
+              HAS_TEAM_APPROVAL="true"
+              break
+            fi
+          done
+          echo "HAS_TEAM_APPROVAL=$HAS_TEAM_APPROVAL" >> $GITHUB_OUTPUT
+          
+      - name: Debug Info
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          echo "PR Creator: ${{ steps.pr-details.outputs.PR_CREATOR }}"
+          echo "Is Team Member: ${{ steps.pr-details.outputs.IS_TEAM_MEMBER }}"
+          echo "Has Approval Label: ${{ steps.pr-details.outputs.HAS_APPROVAL_LABEL }}"
+          echo "Is Draft: ${{ steps.pr-details.outputs.IS_DRAFT }}"
+          echo "Has Team Approval: ${{ steps.pr-details.outputs.HAS_TEAM_APPROVAL }}"
+      
+      - name: Convert to draft if team member PR without approval
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        if: ${{ steps.pr-details.outputs.IS_TEAM_MEMBER == 'true' && steps.pr-details.outputs.HAS_APPROVAL_LABEL == 'false' && steps.pr-details.outputs.IS_DRAFT == 'false' }}
+        run: |
+          gh pr ready --undo ${{ github.event.pull_request.number }}
+          gh pr comment ${{ github.event.pull_request.number }} --body "This PR by team member @${{ steps.pr-details.outputs.PR_CREATOR }} has been automatically converted to draft status pending internal team review. Once approved by another team member, it will be made available for wider review."
+      
+      - name: Add approval label if approved by team member
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        if: ${{ steps.pr-details.outputs.IS_TEAM_MEMBER == 'true' && steps.pr-details.outputs.HAS_TEAM_APPROVAL == 'true' && steps.pr-details.outputs.HAS_APPROVAL_LABEL == 'false' }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} --add-label "internal-approval"
+          gh pr comment ${{ github.event.pull_request.number }} --body "Internal team approval granted! This PR is now ready for wider review."
+      
+      - name: Convert from draft to ready when approved
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        if: ${{ steps.pr-details.outputs.IS_TEAM_MEMBER == 'true' && steps.pr-details.outputs.HAS_APPROVAL_LABEL == 'true' && steps.pr-details.outputs.IS_DRAFT == 'true' }}
+        run: |
+          gh pr ready ${{ github.event.pull_request.number }}
+          gh pr comment ${{ github.event.pull_request.number }} --body "This PR has been marked as ready for review following internal approval."
