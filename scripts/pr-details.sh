@@ -3,10 +3,6 @@
 # This script retrieves the details of a pull request from the GitHub repository.
 # Usage: ./pr-details.sh <PR_NUMBER> <TEAM_MEMBERS>
 
-
-# setup
-set -euo pipefail
-
 # Check if the required arguments are provided
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 <PR_NUMBER> <TEAM_MEMBERS>"

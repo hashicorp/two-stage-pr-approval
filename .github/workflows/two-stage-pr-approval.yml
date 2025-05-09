@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
       
       - name: two-stage-pr-review
-        uses: ./action
+        uses: ./
         with:
           pat-token: ${{ secrets.PAT_TOKEN }}
           team-members: "mukeshjc sonamtenzin2 abhijeetviswa mohanmanikanta2299"

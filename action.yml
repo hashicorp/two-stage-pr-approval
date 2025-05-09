@@ -20,7 +20,7 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.pat-token}}
       run: |
-        ./scripts/pr-details.sh ${{ github.event.pull_request.number }} "${{ inputs.team-members }}" >> $GITHUB_OUTPUT
+        scripts/pr-details.sh ${{ github.event.pull_request.number }} "${{ inputs.team-members }}" >> $GITHUB_OUTPUT
     
     - name: "Debug Info"
       shell: 'bash'
