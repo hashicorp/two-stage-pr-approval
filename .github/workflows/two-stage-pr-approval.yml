@@ -18,5 +18,3 @@ jobs:
       
       - name: two-stage-pr-review
         uses: ./
-        with:
-          token: ${{ secrets.PAT_TOKEN }}

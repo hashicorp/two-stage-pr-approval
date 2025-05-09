@@ -4,7 +4,8 @@ description: This action manages the two-stage PR review process from IP Complia
 inputs:
   token:
     description: "GitHub Personal Access Token OR token to access the repository via the GitHub CLI"
-    required: true
+    default: ${{ github.token }}
+    required: false
   team-members:
     description: "Space seperated list of team members whose approval is initially required"
     default: "ritikrajdev mukeshjc sonamtenzin2 abhijeetviswa mohanmanikanta2299"
