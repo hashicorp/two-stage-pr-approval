@@ -16,18 +16,23 @@ This workflow implements a two-stage review process that:
 
 ## Implementation Steps
 
-1. **Save the workflow file:**
-   - Create a `.github/workflows/two-stage-pr-approval.yml` file in your repository
-   - Copy the provided workflow code into this file
+1. **Use the workflow:**
+   - If you already have a ci configured for checking PR, feel free to add it over there OR you can take a reference from [two-stage-pr-approval](./.github/workflows/two-stage-pr-approval.yml) for creating a workflow file.
+   - To use the workflow, add in the following snippet in list of steps with the required inputs
+   ```yaml
+      - name: two-stage-pr-review
+        uses: hashicorp/two-stage-pr-approval@main
+        with:
+         token: ${{ secrets.PAT_TOKEN }}
+         team-members: "team-member-1 team-member-2 team-member-3"
+   ```
+   - Make sure you only run it on pull_request and pull_request_review.
 
-2. **Configure team members:**
-   - In the workflow file, replace `['team-member-1', 'team-member-2', 'team-member-3']` with the GitHub usernames of your team members who are authorized to grant internal approval
-
-3. **Set up repository permissions:**
+2. **Set up repository permissions:**
    - Ensure the GitHub Actions have appropriate permissions to modify PRs and add labels
    - You can adjust permissions in repository settings
 
-4. **Create the required label:**
+3. **Create the required label:**
    - Create an `internal-approval` label in your repository
 
 ## Additional Configuration Options

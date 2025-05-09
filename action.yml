@@ -2,8 +2,8 @@ name: Two-Stage PR Review
 description: This action manages the two-stage PR review process from IP Compliance team by default.
 
 inputs:
-  pat-token:
-    description: "GitHub Personal Access Token"
+  token:
+    description: "GitHub Personal Access Token OR token to access the repository via the GitHub CLI"
     required: true
   team-members:
     description: "Space seperated list of team members whose approval is initially required"
@@ -17,7 +17,7 @@ runs:
       id: pr-details
       shell: "bash"
       env:
-        GH_TOKEN: ${{ inputs.pat-token}}
+        GH_TOKEN: ${{ inputs.token }}
       run: |
         scripts/pr-details.sh ${{ github.event.pull_request.number }} "${{ inputs.team-members }}" >> $GITHUB_OUTPUT
 
@@ -33,7 +33,7 @@ runs:
     - name: Convert to draft if team member PR without approval
       shell: "bash"
       env:
-        GH_TOKEN: ${{ inputs.pat-token }}
+        GH_TOKEN: ${{ inputs.token }}
       if: ${{ steps.pr-details.outputs.IS_TEAM_MEMBER == 'true' && steps.pr-details.outputs.HAS_APPROVAL_LABEL == 'false' && steps.pr-details.outputs.IS_DRAFT == 'false' }}
       run: |
         gh pr ready --undo ${{ github.event.pull_request.number }}
@@ -42,7 +42,7 @@ runs:
     - name: Add approval label if approved by team member
       shell: "bash"
       env:
-        GH_TOKEN: ${{ inputs.pat-token }}
+        GH_TOKEN: ${{ inputs.token }}
       if: ${{ steps.pr-details.outputs.IS_TEAM_MEMBER == 'true' && steps.pr-details.outputs.HAS_TEAM_APPROVAL == 'true' && steps.pr-details.outputs.HAS_APPROVAL_LABEL == 'false' }}
       run: |
         gh pr edit ${{ github.event.pull_request.number }} --add-label "internal-approval"
@@ -51,7 +51,7 @@ runs:
     - name: Convert from draft to ready when approved
       shell: "bash"
       env:
-        GH_TOKEN: ${{ inputs.pat-token }}
+        GH_TOKEN: ${{ inputs.token }}
       if: ${{ steps.pr-details.outputs.IS_TEAM_MEMBER == 'true' && steps.pr-details.outputs.HAS_APPROVAL_LABEL == 'true' && steps.pr-details.outputs.IS_DRAFT == 'true' }}
       run: |
         gh pr ready ${{ github.event.pull_request.number }}
