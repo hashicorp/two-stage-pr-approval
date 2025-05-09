@@ -7,7 +7,7 @@ inputs:
     required: true
   team-members:
     description: 'Space seperated list of team members whose approval is initially required'
-    default: "mukeshjc sonamtenzin2 abhijeetviswa mohanmanikanta2299"
+    default: "ritikrajdev mukeshjc sonamtenzin2 abhijeetviswa mohanmanikanta2299"
     required: false
 
 runs:
