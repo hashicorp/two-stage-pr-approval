@@ -20,4 +20,3 @@ jobs:
         uses: ./
         with:
           pat-token: ${{ secrets.PAT_TOKEN }}
-          team-members: "mukeshjc sonamtenzin2 abhijeetviswa mohanmanikanta2299"

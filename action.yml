@@ -4,8 +4,7 @@ description: This action manages the two-stage PR review process from IP Complia
 inputs:
   pat-token:
     description: 'GitHub Personal Access Token'
-    default: ${{ secrets.PAT_TOKEN }}
-    required: false
+    required: true
   team-members:
     description: 'Space seperated list of team members whose approval is initially required'
     default: "mukeshjc sonamtenzin2 abhijeetviswa mohanmanikanta2299"
