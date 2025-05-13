@@ -19,9 +19,8 @@ runs:
       shell: "bash"
       env:
         GH_TOKEN: ${{ inputs.token }}
-        GITHUB_ACTION_PATH: ${{ github.action_path }}
       run: |
-        ${GITHUB_ACTION_PATH}scripts/pr-details.sh ${{ github.event.pull_request.number }} "${{ inputs.team-members }}" >> $GITHUB_OUTPUT        
+        ${{ github.action_path }}/scripts/pr-details.sh ${{ github.event.pull_request.number }} "${{ inputs.team-members }}" >> $GITHUB_OUTPUT        
 
     - name: "Debug Info"
       shell: "bash"
