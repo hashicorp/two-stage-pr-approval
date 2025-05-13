@@ -14,12 +14,12 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: "Debug Filesystem"
+    - name: "Add scripts in Github path"
       shell: "bash"
       run: |
-        echo "Current Directory: $(pwd)"
-        echo "Files in Directory:"
-        ls -la
+        echo "${GITHUB_ACTION_PATH}scripts/" >> $GITHUB_PATH
+      env:
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
 
     - name: Get PR details
       id: pr-details
@@ -27,7 +27,7 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.token }}
       run: |
-        scripts/pr-details.sh ${{ github.event.pull_request.number }} "${{ inputs.team-members }}" >> $GITHUB_OUTPUT
+        pr-details.sh ${{ github.event.pull_request.number }} "${{ inputs.team-members }}" >> $GITHUB_OUTPUT
 
     - name: "Debug Info"
       shell: "bash"
