@@ -12,6 +12,8 @@ fi
 PR_NUMBER=$1
 TEAM_MEMBERS=$2
 
+pwd
+
 # Get PR creator
 PR_CREATOR=$(gh pr view $PR_NUMBER --json author --jq .author.login)
 echo "PR_CREATOR=$PR_CREATOR"
