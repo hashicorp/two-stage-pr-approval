@@ -14,13 +14,19 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Add scripts in gitHub path
+      run: echo "${GITHUB_ACTION_PATH}scripts/" >> $GITHUB_PATH
+      shell: bash
+      env:
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
+
     - name: Get PR details
       id: pr-details
       shell: "bash"
       env:
         GH_TOKEN: ${{ inputs.token }}
       run: |
-        ${{ github.action_path }}/scripts/pr-details.sh ${{ github.event.pull_request.number }} "${{ inputs.team-members }}" >> $GITHUB_OUTPUT        
+        pr-details.sh ${{ github.event.pull_request.number }} "${{ inputs.team-members }}" >> $GITHUB_OUTPUT
 
     - name: "Debug Info"
       shell: "bash"
