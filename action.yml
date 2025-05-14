@@ -10,6 +10,10 @@ inputs:
     description: "Space seperated list of team members whose approval is initially required"
     default: "ritikrajdev mukeshjc sonamtenzin2 abhijeetviswa mohanmanikanta2299"
     required: false
+  debug:
+    description: "Enable debug mode"
+    default: "false"
+    required: false
 
 runs:
   using: "composite"
@@ -20,16 +24,7 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.token }}
       run: |
-        ${{ github.action_path }}/scripts/pr-details.sh ${{ github.event.pull_request.number }} "${{ inputs.team-members }}" >> $GITHUB_OUTPUT        
-
-    - name: "Debug Info"
-      shell: "bash"
-      run: |
-        echo "PR_CREATOR=${{ steps.pr-details.outputs.PR_CREATOR }}"
-        echo "IS_TEAM_MEMBER=${{ steps.pr-details.outputs.IS_TEAM_MEMBER }}"
-        echo "HAS_APPROVAL_LABEL=${{ steps.pr-details.outputs.HAS_APPROVAL_LABEL }}"
-        echo "IS_DRAFT=${{ steps.pr-details.outputs.IS_DRAFT }}"
-        echo "HAS_TEAM_APPROVAL=${{ steps.pr-details.outputs.HAS_TEAM_APPROVAL }}"
+        ${{ github.action_path }}scripts/pr-details.sh ${{ github.event.pull_request.number }} "${{ inputs.team-members }}" "${{ inputs.debug }}" >> $GITHUB_OUTPUT        
 
     - name: Convert to draft if team member PR without approval
       shell: "bash"
