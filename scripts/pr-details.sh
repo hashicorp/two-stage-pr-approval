@@ -26,6 +26,7 @@ echoerr() {
 if $DEBUG; then
     echoerr "Debugging enabled"
     pwd 1>&2
+    ls -la 1>&2
 fi
     
 
