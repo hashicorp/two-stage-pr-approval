@@ -24,7 +24,7 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.token }}
       run: |
-        ${{ github.action_path }}scripts/pr-details.sh ${{ github.event.pull_request.number }} "${{ inputs.team-members }}" "${{ inputs.debug }}" >> $GITHUB_OUTPUT        
+        ${{ github.action_path }}/scripts/pr-details.sh ${{ github.event.pull_request.number }} "${{ inputs.team-members }}" "${{ inputs.debug }}" >> $GITHUB_OUTPUT        
 
     - name: Convert to draft if team member PR without approval
       shell: "bash"
