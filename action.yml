@@ -10,10 +10,6 @@ inputs:
     description: "Space seperated list of team members whose approval is initially required"
     default: "ritikrajdev mukeshjc sonamtenzin2 abhijeetviswa mohanmanikanta2299"
     required: false
-  debug:
-    description: "Enable debug mode"
-    default: "false"
-    required: false
   internal-approval-label:
     description: "Label to be used for internal approval. This label should already exist in the repository"
     default: "internal-approval"
@@ -28,7 +24,7 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.token }}
       run: |
-        ${{ github.action_path }}/scripts/pr-details.sh ${{ github.event.pull_request.number }} "${{ inputs.team-members }}" "${{ inputs.debug }}" >> $GITHUB_OUTPUT        
+        ${{ github.action_path }}/scripts/pr-details.sh ${{ github.event.pull_request.number }} "${{ inputs.team-members }}" >> $GITHUB_OUTPUT        
 
     - name: Convert to draft if team member PR without approval
       shell: "bash"
