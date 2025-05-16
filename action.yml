@@ -1,0 +1,54 @@
+name: Two-Stage PR Review
+description: This action manages the two-stage PR review process from IP Compliance team by default.
+
+inputs:
+  token:
+    description: "GitHub Personal Access Token OR token to access the repository via the GitHub CLI"
+    default: ${{ github.token }}
+    required: false
+  team-members:
+    description: "Space seperated list of team members whose approval is initially required"
+    default: "ritikrajdev mukeshjc sonamtenzin2 abhijeetviswa mohanmanikanta2299"
+    required: false
+  internal-approval-label:
+    description: "Label to be used for internal approval. This label should already exist in the repository"
+    default: "internal-approval"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get PR details
+      id: pr-details
+      shell: "bash"
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        ${{ github.action_path }}/scripts/pr-details.sh ${{ github.event.pull_request.number }} "${{ inputs.team-members }}" >> $GITHUB_OUTPUT        
+
+    - name: Convert to draft if team member PR without approval
+      shell: "bash"
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      if: ${{ steps.pr-details.outputs.IS_TEAM_MEMBER == 'true' && steps.pr-details.outputs.HAS_APPROVAL_LABEL == 'false' && steps.pr-details.outputs.IS_DRAFT == 'false' }}
+      run: |
+        gh pr ready --undo ${{ github.event.pull_request.number }}
+        gh pr comment ${{ github.event.pull_request.number }} --body "This PR by team member @${{ steps.pr-details.outputs.PR_CREATOR }} has been automatically converted to draft status pending internal team review. Once approved by another team member, it will be made available for wider review."
+
+    - name: Add approval label if approved by team member
+      shell: "bash"
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      if: ${{ steps.pr-details.outputs.IS_TEAM_MEMBER == 'true' && steps.pr-details.outputs.HAS_TEAM_APPROVAL == 'true' && steps.pr-details.outputs.HAS_APPROVAL_LABEL == 'false' }}
+      run: |
+        gh pr edit ${{ github.event.pull_request.number }} --add-label "${{ inputs.internal-approval-label }}"
+        gh pr comment ${{ github.event.pull_request.number }} --body "Internal team approval granted! This PR is now ready for wider review."
+
+    - name: Convert from draft to ready when approved
+      shell: "bash"
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      if: ${{ steps.pr-details.outputs.IS_TEAM_MEMBER == 'true' && steps.pr-details.outputs.HAS_APPROVAL_LABEL == 'true' && steps.pr-details.outputs.IS_DRAFT == 'true' }}
+      run: |
+        gh pr ready ${{ github.event.pull_request.number }}
+        gh pr comment ${{ github.event.pull_request.number }} --body "This PR has been marked as ready for review following internal approval."
