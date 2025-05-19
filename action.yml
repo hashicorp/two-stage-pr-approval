@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 name: Two-Stage PR Review
 description: This action manages the two-stage PR review process from IP Compliance team by default.
 
