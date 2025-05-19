@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MIT
+
 
 # This script retrieves the details of a pull request from the GitHub repository.
 # Usage: ./pr-details.sh <PR_NUMBER> <TEAM_MEMBERS>
