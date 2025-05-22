@@ -45,6 +45,9 @@ runs:
       if: ${{ steps.pr-details.outputs.IS_TEAM_MEMBER == 'true' && steps.pr-details.outputs.HAS_TEAM_APPROVAL == 'true' && steps.pr-details.outputs.HAS_APPROVAL_LABEL == 'false' }}
       run: |
         gh pr edit ${{ github.event.pull_request.number }} --add-label "${{ inputs.internal-approval-label }}"
+        if [ "${{ steps.pr-details.outputs.IS_DRAFT }}" == "true" ]; then
+          gh pr ready ${{ github.event.pull_request.number }}
+        fi
         gh pr comment ${{ github.event.pull_request.number }} --body "Internal team approval granted! This PR is now ready for wider review."
 
     - name: Convert from draft to ready when approved
