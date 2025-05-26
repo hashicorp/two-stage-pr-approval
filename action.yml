@@ -41,6 +41,9 @@ runs:
         GH_TOKEN: ${{ inputs.token }}
       if: ${{ steps.pr-details.outputs.IS_TEAM_MEMBER == 'true' && steps.pr-details.outputs.HAS_TEAM_APPROVAL == 'true' && steps.pr-details.outputs.HAS_APPROVAL_LABEL == 'false' }}
       run: |
+        if ! gh label list | grep -q "^${{ inputs.internal-approval-label }}\b"; then
+          gh label create "${{ inputs.internal-approval-label }}" --description "Indicates internal team approval has been granted"
+        fi
         gh pr edit ${{ github.event.pull_request.number }} --add-label "${{ inputs.internal-approval-label }}"
         if [ "${{ steps.pr-details.outputs.IS_DRAFT }}" == "true" ]; then
           gh pr ready ${{ github.event.pull_request.number }}
